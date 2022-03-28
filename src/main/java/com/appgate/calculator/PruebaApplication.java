@@ -1,4 +1,4 @@
-package com.appgate.prueba;
+package com.appgate.calculator;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
