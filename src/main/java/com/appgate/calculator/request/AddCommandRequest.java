@@ -3,14 +3,14 @@ package com.appgate.calculator.request;
 public class AddCommandRequest {
 
     private String number;
-    private String sessionId;
+    private String environment;
 
-    public String getSessionId() {
-        return sessionId;
+    public String getEnvironment() {
+        return environment;
     }
 
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
+    public void setEnvironment(String environment) {
+        this.environment = environment;
     }
 
     public String getNumber() {

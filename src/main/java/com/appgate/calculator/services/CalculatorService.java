@@ -6,16 +6,15 @@ import com.appgate.calculator.enums.EOperator;
 import com.appgate.calculator.request.AddCommandRequest;
 import com.appgate.calculator.request.RunCalculatorRequest;
 import com.appgate.calculator.responses.AddCommandResponse;
-import com.appgate.calculator.responses.GetSessionResponse;
+import com.appgate.calculator.responses.ResponseError;
+import com.appgate.calculator.responses.GetEnvironmentResponse;
 import com.appgate.calculator.responses.RunCalculatorResponse;
 import com.appgate.calculator.utils.Utilities;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import reactor.netty.http.server.HttpServerState;
 
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -24,7 +23,7 @@ public class CalculatorService {
 
     private static Supplier<String> tokenSupplier;
 
-    private static HashMap<String,SessionDTO> sessions;
+    private static HashMap<String,SessionDTO> enviroments;
 
     static{
         tokenSupplier = () -> {
@@ -35,50 +34,69 @@ public class CalculatorService {
                     .append(UUID.randomUUID().toString()).toString();
         };
 
-       sessions= new HashMap<String,SessionDTO>();
+        enviroments= new HashMap<String,SessionDTO>();
     }
 
     public CalculatorService(){
 
     }
 
-    public GetSessionResponse getSession(){
+    public Object getEnvironment(){
 
-        GetSessionResponse response=new GetSessionResponse();
+        Object response=null;
 
-        SessionDTO newSessionDTO =new SessionDTO(tokenSupplier.get());
+        try {
 
-        sessions.put(newSessionDTO.getSessionId(),newSessionDTO);
+            GetEnvironmentResponse responseOK=new GetEnvironmentResponse();
 
-        response.setSessionId(newSessionDTO.getSessionId());
+            SessionDTO newSessionDTO =new SessionDTO(tokenSupplier.get());
+
+            enviroments.put(newSessionDTO.getEnvironment(),newSessionDTO);
+
+            responseOK.setEnvironment(newSessionDTO.getEnvironment());
+
+            response=responseOK;
+
+        }catch (Exception e){
+
+            response=Utilities.getResponseError(HttpStatus.INTERNAL_SERVER_ERROR.value(),e.toString());
+
+        }
 
         return response;
     }
 
-    public AddCommandResponse addCommand(AddCommandRequest request){
+    public Object addCommand(AddCommandRequest request){
 
-        AddCommandResponse response = new AddCommandResponse();
+        Object response=null;
+        ResponseError responseError=new ResponseError();
+        response=responseError;
 
         try {
 
-            SessionDTO oldSessionDTO = sessions.get(request.getSessionId());
+
+
+            SessionDTO oldSessionDTO = enviroments.get(request.getEnvironment());
 
             if (oldSessionDTO == null) {
-                response.setStatus(HttpStatus.NOT_FOUND.value());
-                response.setError("Sesion Fail " + request.getSessionId() + " no encontrada");
+                response=Utilities.getResponseError(HttpStatus.NOT_FOUND.value(),"Environment Fail " + request.getEnvironment() + " NOT_FOUND");
+
             } else {
 
                 if(request.getNumber()==null||request.getNumber().isEmpty()){
-                    response.setStatus(HttpStatus.BAD_REQUEST.value());
-                    response.setError("Es obligatorio el campo number");
+                    response=Utilities.getResponseError(HttpStatus.BAD_REQUEST.value(),"Es obligatorio el campo number");
+
                 }else{
 
                     Long number= Utilities.convertToLong(request.getNumber());
                     if(number==null){
-                        response.setStatus(HttpStatus.BAD_REQUEST.value());
-                        response.setError("El valor de number es incorrecto");
+                        response=Utilities.getResponseError(HttpStatus.BAD_REQUEST.value(),"El valor de number es incorrecto");
+
                     }else{
-                        oldSessionDTO.push(Long.valueOf(request.getNumber()));
+                        AddCommandResponse responseOK = new AddCommandResponse();
+                        oldSessionDTO.getStack().push(Long.valueOf(request.getNumber()));
+                        responseOK.setNumbers(oldSessionDTO.getStack());
+                        response=responseOK;
 
                     }
 
@@ -87,40 +105,46 @@ public class CalculatorService {
             }
 
         }catch (Exception e){
-            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            response.setError(e.toString());
+            response=Utilities.getResponseError(HttpStatus.INTERNAL_SERVER_ERROR.value(),e.toString());
+
         }
 
        return response ;
     }
 
-    public RunCalculatorResponse runCalculator(RunCalculatorRequest request){
+    public Object runCalculator(RunCalculatorRequest request){
 
-        RunCalculatorResponse response=new RunCalculatorResponse();
+        Object response=null;
+        ResponseError responseError=new ResponseError();
+        response=responseError;
 
         try {
 
-            SessionDTO oldSessionDTO = sessions.get(request.getSessionId());
+            SessionDTO oldSessionDTO = enviroments.get(request.getEnvironment());
 
             if (oldSessionDTO == null) {
-                response.setStatus(HttpStatus.NOT_FOUND.value());
-                response.setError("Sesion Fail " + request.getSessionId() + " no encontrada");
+                response=Utilities.getResponseError(HttpStatus.NOT_FOUND.value(),"Sesion Fail " + request.getEnvironment() + " NOT_FOUND");
+
             } else {
 
                 if(request.getOperator()==null||request.getOperator().isEmpty()){
-                    response.setStatus(HttpStatus.BAD_REQUEST.value());
-                    response.setError("Es obligatorio el campo operator");
+
+                    response=Utilities.getResponseError(HttpStatus.BAD_REQUEST.value(),"Es obligatorio el campo operator");
+
                 }else{
-                    if(oldSessionDTO.getLength()>=2){
+                    if(oldSessionDTO.getStack().size()>=2){
 
 
-                        oldSessionDTO.push(Utilities.calculator(oldSessionDTO.pop(),
-                                oldSessionDTO.pop(), EOperator.valueOf(request.getOperator())));
+                        oldSessionDTO.getStack().push(Utilities.calculator(oldSessionDTO.getStack().pop(),
+                                oldSessionDTO.getStack().pop(), EOperator.valueOf(request.getOperator())));
 
-                        response.setError(""+oldSessionDTO.getStack().peek());
+                        RunCalculatorResponse responseOK=new RunCalculatorResponse();
+                        responseOK.setNumbers(oldSessionDTO.getStack());
+                        responseOK.setResult(oldSessionDTO.getStack().peek());
+                        response=responseOK;
                     }else{
-                        response.setStatus(HttpStatus.NO_CONTENT.value());
-                        response.setError("La pila no tiene numeros sufisientes para "+request.getOperator());
+                        response=Utilities.getResponseError(HttpStatus.NO_CONTENT.value(),"La pila no tiene numeros sufisientes para "+request.getOperator());
+
                     }
 
                 }
@@ -128,8 +152,7 @@ public class CalculatorService {
             }
 
         }catch (Exception e) {
-            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            response.setError(e.toString());
+            response=Utilities.getResponseError(HttpStatus.INTERNAL_SERVER_ERROR.value(),e.toString());
         }
 
         return response;

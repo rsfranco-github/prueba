@@ -4,24 +4,26 @@ import com.appgate.calculator.enums.EOperator;
 
 import java.util.Stack;
 
+/**
+ * Clase de sesion que permite agrupar la informacion generada para cada uno de los ambientes.
+ */
 public class SessionDTO {
 
-    private String sessionId;
+    private String environment;
     private Stack<Long> stack;
-    private int length;
 
-    public SessionDTO(String sessionId){
-        this.sessionId=sessionId;
+    public SessionDTO(String environment){
+        this.environment=environment;
         this.stack=new Stack<Long>();
-        this.length=0;
     }
 
 
-    public String getSessionId() {
-        return sessionId;
+    public String getEnvironment() {
+        return environment;
     }
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
+
+    public void setEnvironment(String environment) {
+        this.environment = environment;
     }
 
     public Stack<Long> getStack() {
@@ -32,23 +34,6 @@ public class SessionDTO {
         this.stack = stack;
     }
 
-    public int getLength() {
-        return length;
-    }
-
-    public void setLength(int length) {
-        this.length = length;
-    }
-
-    public void push(Long item){
-        this.stack.push(item);
-        this.length++;
-    }
-
-    public Long pop(){
-        this.length--;
-        return this.stack.pop();
 
 
-    }
 }

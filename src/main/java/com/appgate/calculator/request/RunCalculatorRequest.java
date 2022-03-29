@@ -3,7 +3,7 @@ package com.appgate.calculator.request;
 public class RunCalculatorRequest {
 
     private String operator;
-    private String sessionId;
+    private String environment;
 
     public String getOperator() {
         return operator;
@@ -13,11 +13,11 @@ public class RunCalculatorRequest {
         this.operator = operator;
     }
 
-    public String getSessionId() {
-        return sessionId;
+    public String getEnvironment() {
+        return environment;
     }
 
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
+    public void setEnvironment(String environment) {
+        this.environment = environment;
     }
 }
