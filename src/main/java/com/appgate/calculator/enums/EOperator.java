@@ -1,4 +1,4 @@
-package com.appgate.calculator;
+package com.appgate.calculator.enums;
 
 public enum EOperator {
 
@@ -16,5 +16,7 @@ public enum EOperator {
     public String getOperator() {
         return operator;
     }
+
+
 
 }
