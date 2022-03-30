@@ -9,6 +9,8 @@ La coleccion de postman se puede importar del siguiente link:
 
 https://www.getpostman.com/collections/0414ac33e1612e3499a7
 
+Alli podran encontrar los metodos con sus test case.
+
 La aplicacion consta de 3 metodos en total. 1 metodo GET y 2 Metodos POST.
 
 Para ejecutar la pruebas desde la coleccion de postman se debera ejecutar en el siguiente orden los metodos:
